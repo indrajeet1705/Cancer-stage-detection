@@ -6,7 +6,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer,pipeline
 import os
 from  flask_cors import CORS 
 
-# Load cancer stage prediction model and encoders
 cancer_model = joblib.load('logistic_regression_model.pkl')
 feature_encoders = joblib.load('feature_encoders.pkl')
 target_encoder = joblib.load('target_encoder.pkl')
@@ -25,7 +24,6 @@ def predict():
         data = request.get_json()
         input_df = pd.DataFrame([data])
 
-        # Apply label encoding to categorical features
         categorical_features = ['Grade', 'T Stage', 'N Stage', 'Estrogen Status', 'Progesterone Status']
         for col in categorical_features:
             if col in input_df.columns and col in feature_encoders:
@@ -34,11 +32,9 @@ def predict():
             elif col in input_df.columns:
                 return jsonify({'error': f'Encoder not found for feature: {col}'}), 400
 
-        # Predict cancer stage
         predicted_stage_encoded = cancer_model.predict(input_df)
         predicted_stage = target_encoder.inverse_transform(predicted_stage_encoded)
 
-        # Mapping clinical stage → simple explanation
         stage_mapping = {
             "0": "Stage 0 (Very Early Stage, In situ)",
             "I": "Stage I (Early Stage)",
